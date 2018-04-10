@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Websocket MJPEG</title>
+	<style>
+		html,body{
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			height: 100%;
+			background-color: #000;
+			overflow: hidden;
+		}
+		#video{
+			position: absolute;
+			top: 0;
+			left: 0;
+		}
+		#stage{
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+</head>
+<body>
+
+	<div id="stage">
+		<canvas id="video"></canvas>
+	</div>
+
+	<script src="mjpeg-player.js"></script>
+	<script>
+		var stage = document.getElementById('stage');
+		var canvas = document.getElementById('video');
+		var width = 4;
+		var height = 3;
+		var ratio = width / height;
+		
+		var player = new MjpegPlayer('ws://' + location.host + ':8081', canvas, {
+			drawInfo: true
+		});
+
+		window.addEventListener('resize', resizeCanvas);
+		canvas.addEventListener('click', player.togglePlay.bind(player));
+
+		resizeCanvas();
+
+		function resizeCanvas(){
+
+			var facX = stage.clientWidth / width;
+			var facY = stage.clientHeight / height;
+
+			if(facX > facY){
+				canvas.height = stage.clientHeight;
+				canvas.width = canvas.height * ratio;
+				canvas.style.top = 0;
+				canvas.style.left = ((stage.clientWidth - canvas.width) / 2) + 'px';
+			}
+			else{
+				canvas.width = stage.clientWidth;
+				canvas.height = canvas.width / ratio;
+				canvas.style.left = 0;
+				canvas.style.top = ((stage.clientHeight - canvas.height) / 2) + 'px';
+			}
+		}
+		
+	</script>
+</body>
+</html>
