@@ -1,0 +1,21 @@
+{
+  "name": "websocket-mjpeg",
+  "version": "1.0.0",
+  "description": "Stream JPEGs via Websocket",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ./test/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/absatzformat/websocket-mjpeg.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/absatzformat/websocket-mjpeg/issues"
+  },
+  "homepage": "https://github.com/absatzformat/websocket-mjpeg#readme",
+  "dependencies": {
+    "ws": "^5.1.1"
+  }
+}
