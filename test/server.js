@@ -3,14 +3,7 @@
 const { spawn } = require('child_process');
 const { MjpegServer,  MjpegStream } = require('../index');
 
-// const server = new MjpegServer(8081, 8082);
-const server = new MjpegServer(8081);
-const stream = new MjpegStream();
-
-stream.on('data', server.broadcast.bind(server));
-
-// ffmpeg example 
-const proc = spawn('ffmpeg', [
+const videoparams = [
 	'-hwaccel', 'dxva2', // hardware acceleration
 	'-rtbufsize', '100M', // buffer
 	'-f', 'dshow', // input
@@ -22,14 +15,47 @@ const proc = spawn('ffmpeg', [
 	'-r', '25', // fromerate
 	'-an', // no audio
 	'-' // stdout
-], {
-	detached: true
-});
+];
 
-// pipe stdout to mjpeg stream
-proc.stdout.pipe(stream);
+// const server = new MjpegServer(8081, 8082);
+const server = new MjpegServer(8081);
 
-// ffmpeg log
-proc.stderr.on('data', (data) => {
-	// console.log(data.toString());
+let ffmpeg = null; // ffmpeg process
+let connections = 0; // active connections
+
+server.socketServer.on('connection', (client) => {
+
+	connections++;
+
+	if(ffmpeg === null){
+
+		// if ffmpeg is not running, create a new stream and fire it up
+		const stream = new MjpegStream();
+
+		stream.on('data', server.broadcast.bind(server));
+
+		ffmpeg = spawn('ffmpeg', videoParams, { detached: true });
+
+		// pipe stdout to mjpeg stream
+		ffmpeg.stdout.pipe(stream);
+
+		ffmpeg.stderr.on('data', (data) => {
+			console.log('stderr: ' + data);
+		});
+
+		ffmpeg.on('close', (code) => {
+			stream.destroy();
+			console.log('ffmpeg stream closed');
+		});
+	}
+
+	client.on('close', (code, message) => {
+
+		connections--;
+
+		if(connections === 0 && ffmpeg !== null){
+			process.kill(-ffmpeg.pid);
+			ffmpeg = null;
+		}
+	});
 });
