@@ -2,7 +2,7 @@
 
 	'use strict';
 
-	var NEXT_FRAME_MESSAGE = String.fromCharCode(0x01);
+	var NEXT_FRAME_MESSAGE = String.fromCharCode(0xe6);
 
 	var OPTION_DEFAULTS = {
 		autoplay: true,
@@ -33,6 +33,7 @@
 		this.isPlaying = false;
 		this.lastDate = new Date();
 		this.frameCount = 0;
+		this.lastFames = 0
 		this.loadedData = 0;
 
 		this.socket = new WebSocket(url);
@@ -56,9 +57,7 @@
 			console.log(data);
 		}
 		else if(this.isPlaying){ // blob -> image data
-			this.socket.send(NEXT_FRAME_MESSAGE);
 			this.preloadImage.src = URL.createObjectURL(message.data);
-			
 			this.loadedData += message.data.size;
 		}
 	};
@@ -79,6 +78,11 @@
 		if(this.options.drawInfo){
 			this.drawMisc();
 		}
+
+		// request next frame
+		if(this.socket.readyState === WebSocket.OPEN){
+			this.socket.send(NEXT_FRAME_MESSAGE);
+		}
 	};
 
 	mp.drawMisc = function(){
@@ -95,14 +99,21 @@
 		this.ctx.strokeText(timeString, 10, this.ctx.canvas.height - 10);
 		this.ctx.fillText(timeString, 10, this.ctx.canvas.height - 10);
 
-		this.frameCount = date.getSeconds() !== this.lastDate.getSeconds() ? 0 : this.frameCount + 1;
-		var frameText = (this.loadedData / 1024 / 1024).toFixed(2) + 'M F' + (this.frameCount < 10 ? '0' + this.frameCount : '' + this.frameCount);
+		if(date.getSeconds() !== this.lastDate.getSeconds()){
+			this.lastFames = this.frameCount;
+			this.frameCount = 0;
+			this.lastDate = date;
+		}
+		else{
+			this.frameCount++;
+		}
+
+		var fps = 1 / (1 / this.lastFames);
+		var frameText = (this.loadedData / 1024 / 1024).toFixed(2) + 'M ' + (fps < 10 ? '0' + fps : '' + fps) + 'F';
 
 		this.ctx.textAlign = 'right';
 		this.ctx.strokeText(frameText, this.ctx.canvas.width - 10, this.ctx.canvas.height - 10);
 		this.ctx.fillText(frameText, this.ctx.canvas.width - 10, this.ctx.canvas.height - 10);
-
-		this.lastDate = date;
 	};
 
 	mp.play = function(){

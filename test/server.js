@@ -1,13 +1,20 @@
 'use strict';
 
+const path = require('path');
 const { spawn } = require('child_process');
 const { MjpegServer,  MjpegStream } = require('../index');
 
-const videoparams = [
+const fontPath = path.join(__dirname, 'roboto-mono.ttf');;
+
+// devices:
+// Logitech HD Webcam C270
+// Logitech Webcam 300
+const videoParams = [
 	'-hwaccel', 'dxva2', // hardware acceleration
 	'-rtbufsize', '100M', // buffer
 	'-f', 'dshow', // input
-	'-i', 'video=Logitech Webcam 300', // device
+	'-i', 'video=Logitech HD Webcam C270', // device
+	'-vf', 'drawtext=fontfile=\'' + fontPath + '\':text=%{localtime}:fontsize=11:fontcolor=\'white\':boxcolor=0x000000AA:box=1:x=10:y=10',
 	'-c:v', 'mjpeg', // codec
 	'-q:v', '5', // quality
 	'-huffman', 'optimal', // compression
@@ -40,7 +47,7 @@ server.socketServer.on('connection', (client) => {
 		ffmpeg.stdout.pipe(stream);
 
 		ffmpeg.stderr.on('data', (data) => {
-			console.log('stderr: ' + data);
+			// console.log('stderr: ' + data);
 		});
 
 		ffmpeg.on('close', (code) => {
@@ -54,7 +61,7 @@ server.socketServer.on('connection', (client) => {
 		connections--;
 
 		if(connections === 0 && ffmpeg !== null){
-			process.kill(-ffmpeg.pid);
+			ffmpeg.kill();
 			ffmpeg = null;
 		}
 	});
