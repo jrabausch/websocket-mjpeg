@@ -11,7 +11,7 @@
 			padding: 0;
 			width: 100%;
 			height: 100%;
-			background-color: #000;
+			background-color: #fff;
 			overflow: hidden;
 		}
 		#video{
@@ -38,12 +38,13 @@
 	<script>
 		var stage = document.getElementById('stage');
 		var canvas = document.getElementById('video');
-		var width = 4;
-		var height = 3;
+		var width = 21;
+		var height = 9;
 		var ratio = width / height;
 		
 		var player = new MjpegPlayer('ws://localhost:8081', canvas, {
-			drawInfo: true
+			drawInfo: true,
+			imageSize: MjpegPlayer.IMAGE_SIZE_CONTAIN
 		});
 
 		window.addEventListener('resize', resizeCanvas);
@@ -52,6 +53,11 @@
 		resizeCanvas();
 
 		function resizeCanvas(){
+
+			canvas.width = window.innerWidth;
+			canvas.height = window.innerHeight;
+			
+			return;
 
 			var facX = stage.clientWidth / width;
 			var facY = stage.clientHeight / height;

@@ -4,9 +4,14 @@
 
 	var NEXT_FRAME_MESSAGE = String.fromCharCode(0xe6);
 
+	var IMAGE_SIZE_STRETCH = 0;
+	var IMAGE_SIZE_CONTAIN = 1;
+	var IMAGE_SIZE_COVER = 2;
+
 	var OPTION_DEFAULTS = {
 		autoplay: true,
-		drawInfo: false
+		drawInfo: false,
+		imageSize: IMAGE_SIZE_CONTAIN
 	};
 
 	function extend(obj1, obj2){
@@ -43,6 +48,10 @@
 		
 		window.addEventListener('resize', this.onWindowResize.bind(this));
 	};
+
+	MjpegPlayer.IMAGE_SIZE_STRETCH = IMAGE_SIZE_STRETCH;
+	MjpegPlayer.IMAGE_SIZE_CONTAIN = IMAGE_SIZE_CONTAIN;
+	MjpegPlayer.IMAGE_SIZE_COVER = IMAGE_SIZE_COVER;
 
 	var mp = MjpegPlayer.prototype;
 
@@ -82,10 +91,44 @@
 	};
 
 	mp.drawFrame = function(){
-		var width = this.ctx.canvas.width;
-		var height = this.ctx.canvas.height;
 
-		this.ctx.drawImage(this.preloadImage, 0, 0, width, height);
+		var canvasWidth = this.ctx.canvas.width;
+		var canvasHeight = this.ctx.canvas.height;
+
+		// clear canvas
+		this.ctx.fillStyle = 'black';
+		this.ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+		var width = canvasWidth;
+		var height = canvasHeight;
+		var top = 0;
+		var left = 0;
+
+		if(this.options.imageSize !== IMAGE_SIZE_STRETCH){
+
+			var canvasRatio = canvasWidth / canvasHeight;
+
+			var imageWidth = this.preloadImage.naturalWidth;
+			var imageHeight = this.preloadImage.naturalHeight;
+			var imageRatio = imageWidth / imageHeight;
+
+			var takeHeight = this.options.imageSize === IMAGE_SIZE_COVER ? imageRatio > canvasRatio : imageRatio < canvasRatio;
+
+			if(takeHeight){
+
+				height = canvasHeight;
+				width = height * imageRatio;
+				left = (canvasWidth - width) / 2;
+			}
+			else{
+	
+				width = canvasWidth;
+				height = width / imageRatio;
+				top = (canvasHeight - height) / 2;
+			}
+		}
+
+		this.ctx.drawImage(this.preloadImage, left, top, width, height);
 
 		if(this.options.drawInfo){
 			this.drawMisc();
@@ -119,32 +162,31 @@
 			this.frameCount++;
 		}
 
-		var fps = 1 / (1 / this.lastFames);
+		var fps = Math.ceil(1 / (1 / this.lastFames));
 		var frameText = (this.loadedData / 1024 / 1024).toFixed(2) + 'M ' + (fps < 10 ? '0' + fps : '' + fps) + 'F';
 
 		this.ctx.textAlign = 'right';
 		this.ctx.strokeText(frameText, width - 10, height - 10);
 		this.ctx.fillText(frameText, width - 10, height - 10);
 
-		var state = 'PLAYING'
-		var stateFill = '#00cca0'
+		var state = 'PLAYING';
+		var stateFill = '#00cca0';
+		
 		if(!this.isPlaying){
 			state = 'PAUSED';
 			stateFill = '#e74dbb';
 		}
+
 		this.ctx.fillStyle = stateFill;
-		this.ctx.fillRect((width - 50) / 2, height - fontHeight - 10, 50, fontHeight);
+		this.ctx.fillRect(10, height - fontHeight - 22, 50, fontHeight);
 		this.ctx.fillStyle = 'white';
 		this.ctx.textAlign = 'center';
-		this.ctx.fillText(state, width / 2, height - 12);
+		this.ctx.fillText(state, 35, height - 24);
 	};
 
 	mp.play = function(){
-		this.isPlaying = true;
 
-		if(this.options.drawInfo){
-			this.drawMisc();
-		}
+		this.isPlaying = true;
 
 		if(this.socket.readyState === WebSocket.OPEN){
 			this.socket.send(NEXT_FRAME_MESSAGE);
@@ -159,6 +201,6 @@
 		this.isPlaying ? this.pause() : this.play();
 	};
 
-	context.MjpegPlayer = MjpegPlayer;
+	context.MjpegPlayer = Object.freeze(MjpegPlayer);
 
 })(this);

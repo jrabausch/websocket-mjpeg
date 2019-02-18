@@ -1,10 +1,15 @@
 'use strict';
 
 const path = require('path');
+const os = require('os');
 const { spawn } = require('child_process');
 const { MjpegServer,  MjpegStream } = require('../index');
 
-const fontPath = path.join(__dirname, 'roboto-mono.ttf');;
+let fontPath = path.join(__dirname, 'roboto-mono.ttf');
+// windows fix
+if(os.platform() === 'win32'){
+	fontPath = fontPath.replace(/\\/g, '\\\\').replace(':', '\\:');
+}
 
 // devices:
 // Logitech HD Webcam C270
@@ -16,10 +21,10 @@ const videoParams = [
 	'-i', 'video=Logitech HD Webcam C270', // device
 	'-vf', 'drawtext=fontfile=\'' + fontPath + '\':text=%{localtime}:fontsize=11:fontcolor=\'white\':boxcolor=0x000000AA:box=1:x=10:y=10',
 	'-c:v', 'mjpeg', // codec
-	'-q:v', '5', // quality
+	'-q:v', '0', // quality
 	'-huffman', 'optimal', // compression
 	'-f', 'mjpeg', // output format
-	'-r', '25', // fromerate
+	'-r', '30', // fromerate
 	'-an', // no audio
 	'-' // stdout
 ];
