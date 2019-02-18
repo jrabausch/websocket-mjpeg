@@ -40,6 +40,8 @@
 		this.socket.binaryType = 'blob';
 		this.socket.addEventListener('open', this.onSocketOpen.bind(this));
 		this.socket.addEventListener('message', this.onSocketMessage.bind(this));
+		
+		window.addEventListener('resize', this.onWindowResize.bind(this));
 	};
 
 	var mp = MjpegPlayer.prototype;
@@ -56,7 +58,8 @@
 			// TODO: use stream info
 			console.log(data);
 		}
-		else if(this.isPlaying){ // blob -> image data
+		else{ // blob -> image data
+			URL.revokeObjectURL(this.preloadImage.src);
 			this.preloadImage.src = URL.createObjectURL(message.data);
 			this.loadedData += message.data.size;
 		}
@@ -66,7 +69,16 @@
 		if(e.type === 'load'){
 			this.drawFrame();
 		}
-		URL.revokeObjectURL(this.preloadImage.src);
+		
+		// request next frame
+		if(this.isPlaying && this.socket.readyState === WebSocket.OPEN){
+			this.socket.send(NEXT_FRAME_MESSAGE);
+		}
+	};
+
+	mp.onWindowResize = function(e){
+
+		setTimeout(this.drawFrame.bind(this), 0);
 	};
 
 	mp.drawFrame = function(){
@@ -78,26 +90,25 @@
 		if(this.options.drawInfo){
 			this.drawMisc();
 		}
-
-		// request next frame
-		if(this.socket.readyState === WebSocket.OPEN){
-			this.socket.send(NEXT_FRAME_MESSAGE);
-		}
 	};
 
 	mp.drawMisc = function(){
 
-		var date = new Date();
+		var width = this.ctx.canvas.width;
+		var height = this.ctx.canvas.height;
 
-		this.ctx.font = '11px Consolas,Arial,Helvetica,sans-serif';
+		var date = new Date();
+		var fontHeight = 11;
+
+		this.ctx.font = fontHeight + 'px Consolas,Arial,Helvetica,sans-serif';
 		this.ctx.fillStyle = 'white';
 		this.ctx.strokeStyle = 'black';
 		this.ctx.lineWidth = 2;
 		this.ctx.lineJoin = 'round';
 		this.ctx.textAlign = 'left';
 		var timeString = date.toISOString()/*.replace('T', ' ').replace('Z', '')*/;
-		this.ctx.strokeText(timeString, 10, this.ctx.canvas.height - 10);
-		this.ctx.fillText(timeString, 10, this.ctx.canvas.height - 10);
+		this.ctx.strokeText(timeString, 10, height - 10);
+		this.ctx.fillText(timeString, 10, height - 10);
 
 		if(date.getSeconds() !== this.lastDate.getSeconds()){
 			this.lastFames = this.frameCount;
@@ -112,12 +123,29 @@
 		var frameText = (this.loadedData / 1024 / 1024).toFixed(2) + 'M ' + (fps < 10 ? '0' + fps : '' + fps) + 'F';
 
 		this.ctx.textAlign = 'right';
-		this.ctx.strokeText(frameText, this.ctx.canvas.width - 10, this.ctx.canvas.height - 10);
-		this.ctx.fillText(frameText, this.ctx.canvas.width - 10, this.ctx.canvas.height - 10);
+		this.ctx.strokeText(frameText, width - 10, height - 10);
+		this.ctx.fillText(frameText, width - 10, height - 10);
+
+		var state = 'PLAYING'
+		var stateFill = '#00cca0'
+		if(!this.isPlaying){
+			state = 'PAUSED';
+			stateFill = '#e74dbb';
+		}
+		this.ctx.fillStyle = stateFill;
+		this.ctx.fillRect((width - 50) / 2, height - fontHeight - 10, 50, fontHeight);
+		this.ctx.fillStyle = 'white';
+		this.ctx.textAlign = 'center';
+		this.ctx.fillText(state, width / 2, height - 12);
 	};
 
 	mp.play = function(){
 		this.isPlaying = true;
+
+		if(this.options.drawInfo){
+			this.drawMisc();
+		}
+
 		if(this.socket.readyState === WebSocket.OPEN){
 			this.socket.send(NEXT_FRAME_MESSAGE);
 		}
