@@ -4,7 +4,7 @@
   "description": "Stream JPEGs via Websocket",
   "main": "index.js",
   "scripts": {
-    "test": "node ./test/server.js"
+    "test": "node ./test/webcam.js"
   },
   "repository": {
     "type": "git",
