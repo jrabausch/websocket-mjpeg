@@ -16,13 +16,13 @@ const videoParams = [
 	'-hwaccel', 'dxva2', // hardware acceleration
 	'-rtbufsize', '100M', // buffer
 	'-f', 'dshow', // input
-	'-i', 'video=Logitech HD Webcam C270', // device
+	'-i', 'video=Logitech Webcam 300', // device
 	'-vf', 'drawtext=fontfile=\'' + fontPath + '\':text=%{localtime}:fontsize=11:fontcolor=\'white\':boxcolor=0x000000AA:box=1:x=10:y=10',
 	'-c:v', 'mjpeg', // codec
 	'-q:v', '0', // quality
 	'-huffman', 'optimal', // compression
 	'-f', 'mjpeg', // output format
-	'-r', '30', // fromerate
+	'-r', '30', // framerate
 	'-an', // no audio
 	'-' // stdout
 ];
