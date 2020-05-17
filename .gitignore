@@ -1,3 +1,3 @@
-node_modules
-test/ffmpeg.exe
-test/video.bat
+/node_modules
+/test/ffmpeg.exe
+/test/video.bat
