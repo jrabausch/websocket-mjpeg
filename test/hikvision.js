@@ -2,18 +2,19 @@ const { spawn } = require('child_process');
 const { MjpegServer,  MjpegStream } = require('../index');
 
 const videoParams = [
+	'-re',
 	'-i', 'rtsp://192.168.178.50/Streaming/channels/1', // stream
 	// '-acodec', 'copy',
 	'-c:v', 'mjpeg', // codec
 	'-q:v', '0', // quality
 	'-huffman', 'optimal', // compression
 	'-f', 'mjpeg', // output format
-	'-r', '15', // framerate
+	// '-r', '15', // framerate
 	'-an', // no audio
 	'-' // stdout
 ];
 
-const server = new MjpegServer(8030);
+const server = new MjpegServer(8081);
 
 let ffmpeg = null; // ffmpeg process
 let connections = 0; // active connections

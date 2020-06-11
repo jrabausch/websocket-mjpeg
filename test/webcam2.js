@@ -13,16 +13,14 @@ if(os.platform() === 'win32'){
 // Logitech HD Webcam C270
 // Logitech Webcam 300
 const videoParams = [
-	'-hwaccel', 'dxva2', // hardware acceleration
-	'-rtbufsize', '100M', // buffer
-	'-f', 'dshow', // input
-	'-i', 'video=Logitech Webcam 300', // device
+	'-re',
+	'-i', 'bescherung.mp4', // device
 	'-vf', 'drawtext=fontfile=\'' + fontPath + '\':text=%{localtime}:fontsize=11:fontcolor=\'white\':boxcolor=0x000000AA:box=1:x=10:y=10',
 	'-c:v', 'mjpeg', // codec
 	'-q:v', '0', // quality
 	'-huffman', 'optimal', // compression
 	'-f', 'mjpeg', // output format
-	'-r', '30', // framerate
+	// '-r', '30', // framerate
 	'-an', // no audio
 	'-' // stdout
 ];
@@ -40,21 +38,17 @@ server.socketServer.on('connection', (client) => {
 	if(ffmpeg === null){
 
 		// if ffmpeg is not running, create a new stream and fire it up
-		const stream = new MjpegStream();
-
-		stream.on('data', server.broadcast.bind(server));
 
 		ffmpeg = spawn('ffmpeg', videoParams, { detached: true });
 
 		// pipe stdout to mjpeg stream
-		ffmpeg.stdout.pipe(stream);
+		ffmpeg.stdout.on('data', server.broadcast.bind(server));
 
 		ffmpeg.stderr.on('data', (data) => {
 			console.log('stderr: ' + data);
 		});
 
 		ffmpeg.on('close', (code) => {
-			stream.destroy();
 			console.log('ffmpeg stream closed');
 		});
 	}
