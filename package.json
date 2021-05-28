@@ -16,6 +16,6 @@
   },
   "homepage": "https://github.com/absatzformat/websocket-mjpeg#readme",
   "dependencies": {
-    "ws": "^5.1.1"
+    "ws": "^7.4.5"
   }
 }
