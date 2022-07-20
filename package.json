@@ -1,7 +1,7 @@
 {
-  "name": "websocket-mjpeg",
+  "name": "@jrabausch/websocket-mjpeg",
   "version": "1.0.0",
-  "description": "Stream JPEGs via Websocket",
+  "description": "Stream JPEGs via websocket.",
   "main": "index.js",
   "scripts": {
     "test": "node ./test/webcam.js"
